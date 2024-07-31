@@ -32,6 +32,7 @@ protected:
     }
 };
 
+
 TEST_F(BinaryTreeTest, Pointers) {
     ASSERT_FALSE(BTM::is_left_nullptr(&b));
     ASSERT_FALSE(BTM::is_right_nullptr(&b));
@@ -63,3 +64,27 @@ TEST_P(BinaryTreeParamTest, Searching) {
 
 INSTANTIATE_TEST_SUITE_P(Nazwa, BinaryTreeParamTest, testing::Values(12, 3, 5, 23, 6, 18));
 
+
+class SimpleBinaryTreeTest : public testing::Test {
+protected:
+    BinaryTree b;
+
+    SimpleBinaryTreeTest(): b(7) {
+      BTM::insert(&b, 5);
+      BTM::insert(&b, 10);
+    }
+};
+
+TEST_F(SimpleBinaryTreeTest, ChildDelete)
+{
+    ASSERT_TRUE(BTM::search(&b, 10));
+    BTM::delete_value(&b, 10);
+    EXPECT_FALSE(BTM::search(&b, 10));
+}
+
+TEST_F(SimpleBinaryTreeTest, RootDelete)
+{
+    ASSERT_TRUE(BTM::search(&b, 7));
+    BTM::delete_value(&b, 7);
+    EXPECT_FALSE(BTM::search(&b, 7));
+}

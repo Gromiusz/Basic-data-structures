@@ -1,0 +1,1 @@
+add_library(List-lib STATIC list.cpp)

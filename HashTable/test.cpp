@@ -10,12 +10,7 @@ protected:
         h1.insert("av");
         h1.insert("bc");
     }
-
-
 };
-
-
-
 
 TEST_F(HashTableTest, SizeGetter)
 {
@@ -102,3 +97,5 @@ INSTANTIATE_TEST_SUITE_P(Nazwa,
                                         "juyjy",
                                         "ef")
                         );
+
+
