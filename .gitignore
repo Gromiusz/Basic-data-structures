@@ -12,3 +12,7 @@ _deps
 BinaryTree/build/
 HashTable/build/
 List/build/
+.DS_Store
+BinaryTree/.DS_Store
+HashTable/.DS_Store
+List/build/.DS_Store
