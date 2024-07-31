@@ -11,3 +11,4 @@ CTestTestfile.cmake
 _deps
 BinaryTree/build/
 HashTable/build/
+List/build/
