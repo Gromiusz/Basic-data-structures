@@ -18,3 +18,11 @@ TEST_F(ListElementTest, BasicTest){
     delete counter;
 }
 
+// class IntListTest : public testing::Test {
+// protected:
+//     List<int> list;
+
+//     IntListTest(): list(5) {
+
+//     }
+// }

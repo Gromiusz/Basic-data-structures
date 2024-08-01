@@ -2,7 +2,6 @@
 #include <cstddef>
 #include <memory>
 
-
 template <typename T>
 class ListElement {
 public:
@@ -30,13 +29,15 @@ public:
     bool empty();
     size_t size();
 
-    std::shared_ptr<ListElement<T>> begin();
-    std::shared_ptr<ListElement<T>> end();
+    // std::shared_ptr<ListElement<T>> begin();
+    // std::shared_ptr<ListElement<T>> end();
 
     class Iterator {
         std::shared_ptr<ListElement<T>> current_pointer;
 
     public:
+        Iterator(std::shared_ptr<ListElement<T>> ptr): current_pointer(ptr) {}
+
         Iterator& operator++() {
             if(current_pointer->next) {
                 current_pointer = current_pointer->next;
@@ -50,35 +51,77 @@ public:
             return copy;
         }
 
-        bool operator==(const Iterator& other) const {return current_pointer == other.current_pointer};
-        bool operator!=(const Iterator& other) const {return current_pointer != other.current_pointer};
+        T* operator->() {
+            return &current_pointer->value;
+        }
+
+        T& operator*() {
+            return current_pointer->value;
+        }
+
+        bool operator==(const Iterator& other) const {return current_pointer == other.current_pointer;}
+        bool operator!=(const Iterator& other) const {return current_pointer != other.current_pointer;}
+    };
+
+    Iterator begin() {
+        return Iterator(firstElement);
     }
 
+    Iterator end() {
+        return Iterator(nullptr);
+    }
 };
+
+template <typename T>
+void List<T>::push_front(T _value) {
+    if(!firstElement) {
+        firstElement = std::make_shared<ListElement<T>>(_value);
+        return;
+    }
+    auto pointer_cp = firstElement->next;
+    firstElement = std::make_shared<ListElement<T>>(_value);
+    firstElement->next = pointer_cp;
+}
+
+template <typename T>
+void List<T>::push_back(T _value) {
+        if(!firstElement) {
+        firstElement = std::make_shared<ListElement<T>>(_value);
+        return;
+    }
+    std::shared_ptr<ListElement<T>> pointer = firstElement;
+    while (pointer->next)
+    {
+        pointer = pointer->next;
+    }
+    pointer->next = std::make_shared<ListElement<T>>(_value);
+}
 
 
 template <typename T>
 std::shared_ptr<ListElement<T>> ListElement<T>::end()
 {
     if(next) return next->end();
-    return pointerOnMe;
+    return std::shared_ptr<ListElement<T>>(this);;
 }
 
-template <typename T>
-std::shared_ptr<ListElement<T>> List<T>::begin()
-{
-    return next;
-}
+// template <typename T>
+// std::shared_ptr<ListElement<T>> List<T>::begin()
+// {
+//     return next;
+// }
 
-template <typename T>
-std::shared_ptr<ListElement<T>> List<T>::end()
-{
+// template <typename T>
+// std::shared_ptr<ListElement<T>> List<T>::end()
+// {
 
-}
+// }
 
 template <typename T>
 ListElement<T>::ListElement(T _value) : value(_value)
-{}
+{
+    next = nullptr;
+}
 
 // template <typename T>
 // bool ListElement<T>::isEnd()
@@ -99,7 +142,7 @@ void ListElement<T>::count(size_t* counter)
 template <typename T>
 List<T>::List(T _value)
 {
-    firstElement = std::make_unique<ListElement<T>>(_value);
+    firstElement = std::make_shared<ListElement<T>>(_value);
 }
 
 // template <typename T>
