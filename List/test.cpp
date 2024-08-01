@@ -12,5 +12,9 @@ protected:
 TEST_F(ListElementTest, BasicTest){
     ASSERT_EQ(listElement.value, 4);
 
+    size_t* counter = new size_t(0);
+    listElement.count(counter);
+    ASSERT_EQ(*counter, 0);
+    delete counter;
 }
 
