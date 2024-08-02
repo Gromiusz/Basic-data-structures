@@ -9,7 +9,7 @@ protected:
     ListElementTest() : listElement(4) {}
 };
 
-TEST_F(ListElementTest, BasicTest)
+TEST_F(ListElementTest, AllTestsOnElementList)
 {
     ASSERT_EQ(listElement.value, 4);
 
@@ -19,28 +19,38 @@ TEST_F(ListElementTest, BasicTest)
     delete counter;
 }
 
-TEST(EmptyAndSizeOnEmptyList, EmptySize)
+TEST(EmptySize, EmptyList)
 {
     List<int> list;
     ASSERT_TRUE(list.empty());
     ASSERT_EQ(list.size(), 0);
 }
 
-TEST(EmptyAndSizeTest, EmptySize)
+TEST(EmptySize, NotEmptyList)
 {
     List<int> list(2);
     ASSERT_FALSE(list.empty());
     ASSERT_EQ(list.size(), 1);
 }
 
-TEST(beginAndEndTest, beginAndEndd)
+TEST(BeginEnd, NotEmptyList)
 {
     List<int> list(2);
     ASSERT_NE(list.begin(), List<int>::Iterator(nullptr));
     ASSERT_EQ(list.end(), List<int>::Iterator(nullptr));
 }
 
-TEST(PushBackTestOnEmptyList, PushBackOnEmptyList)
+TEST(IteratorPostincrementation, NotEmptyList)
+{
+    List<int> list(2);
+    auto it = list.begin();
+    EXPECT_NE(it, nullptr);
+
+    it++;
+    EXPECT_EQ(it, nullptr);
+}
+
+TEST(Pushback, EmptyList)
 {
     List<int> list;
 
@@ -50,9 +60,12 @@ TEST(PushBackTestOnEmptyList, PushBackOnEmptyList)
     ASSERT_EQ(list.size(), 1);
     auto it = list.begin();
     EXPECT_EQ(*it, 5);
+
+    ++it;
+    EXPECT_EQ(it, list.end());
 }
 
-TEST(PushBackTest, PushBackOnEmptyList)
+TEST(Pushback, NotEmptyList)
 {
     List<int> list(2);
 
@@ -62,9 +75,45 @@ TEST(PushBackTest, PushBackOnEmptyList)
     ASSERT_EQ(list.size(), 2);
     auto it = list.begin();
     EXPECT_EQ(*it, 2);
+
     ++it;
     EXPECT_EQ(*it, 5);
+
+    ++it;
+    EXPECT_EQ(it, list.end());
 }
+
+TEST(Pushfront, EmptyList)
+{
+    List<int> list;
+
+    list.push_front(5);
+
+    ASSERT_FALSE(list.empty());
+    ASSERT_EQ(list.size(), 1);
+    auto it = list.begin();
+    EXPECT_EQ(*it, 5);
+}
+
+// TEST(Pushfront, NotEmptyList)
+// {
+//     List<int> list(2);
+
+//     list.push_front(5);
+
+//     ASSERT_FALSE(list.empty());
+//     EXPECT_EQ(list.size(), 2);
+//     auto it = list.begin();
+//     EXPECT_NE(it, nullptr);
+//     EXPECT_EQ(*it, 5);
+
+//     ++it;
+//     EXPECT_NE(it, nullptr);
+//     EXPECT_EQ(*it, 2);
+
+//     ++it;
+//     EXPECT_EQ(it, nullptr);
+// }
 
 class IntListTest : public testing::Test
 {

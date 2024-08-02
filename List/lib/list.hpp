@@ -53,6 +53,18 @@ public:
 };
 
 template <typename T>
+typename List<T>::Iterator &List<T>::Iterator::operator++()
+{
+    if(current_pointer->next)
+    {
+        current_pointer = current_pointer->next;
+        return *this;
+    }
+    current_pointer = nullptr;
+    return *this;
+}
+
+template <typename T>
 typename List<T>::Iterator List<T>::Iterator::operator++(int)
 {
     Iterator copy = *this;
@@ -72,15 +84,7 @@ T &List<T>::Iterator::operator*()
     return current_pointer->value;
 }
 
-template <typename T>
-typename List<T>::Iterator &List<T>::Iterator::operator++()
-{
-    if (current_pointer->next)
-    {
-        current_pointer = current_pointer->next;
-    }
-    return *this;
-}
+
 
 template <typename T>
 typename List<T>::Iterator List<T>::begin()
