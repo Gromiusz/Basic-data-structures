@@ -22,16 +22,21 @@ class List
 public:
     List() = default;
     List(T _value);
-    void push_back(T _value);
-    void push_front(T _value);
+    void push_back(const T& _value);
+    void push_back(T&& _value);
+    void push_front(const T& _value);
+    void push_front(T&& _value);
     T back();
     T front();
     bool empty();
     size_t size();
+    void clear();
 
     class Iterator;
     Iterator begin();
     Iterator end();
+    void insert_after(const Iterator&, const T&);
+    void erase_after(const Iterator&);
 
     class Iterator
     {
@@ -53,9 +58,31 @@ public:
 };
 
 template <typename T>
+void List<T>::insert_after(const Iterator& _it, const T& _value)
+{
+    auto el = _it.current_pointer;
+    auto copy_of_next = el->next;
+    el->next = std::make_shared<ListElement<T>>(_value);
+    el->next->next = copy_of_next;
+}
+
+template <typename T>
+void List<T>::erase_after(const Iterator& _it)
+{
+    auto el = _it.current_pointer;
+    el->next = el->next->next;
+}
+
+template <typename T>
+void List<T>::clear()
+{
+    firstElement = nullptr;
+}
+
+template <typename T>
 typename List<T>::Iterator &List<T>::Iterator::operator++()
 {
-    if(current_pointer->next)
+    if (current_pointer->next)
     {
         current_pointer = current_pointer->next;
         return *this;
@@ -84,8 +111,6 @@ T &List<T>::Iterator::operator*()
     return current_pointer->value;
 }
 
-
-
 template <typename T>
 typename List<T>::Iterator List<T>::begin()
 {
@@ -99,7 +124,7 @@ typename List<T>::Iterator List<T>::end()
 }
 
 template <typename T>
-void List<T>::push_front(T _value)
+void List<T>::push_front(const T& _value)
 {
     if (!firstElement)
     {
@@ -112,7 +137,20 @@ void List<T>::push_front(T _value)
 }
 
 template <typename T>
-void List<T>::push_back(T _value)
+void List<T>::push_front(T&& _value)
+{
+    if (!firstElement)
+    {
+        firstElement = std::make_shared<ListElement<T>>(std::move(_value));
+        return;
+    }
+    auto pointer_cp = firstElement->next;
+    firstElement = std::make_shared<ListElement<T>>(std::move(_value));
+    firstElement->next = pointer_cp;
+}
+
+template <typename T>
+void List<T>::push_back(const T& _value)
 {
     if (!firstElement)
     {
@@ -125,6 +163,22 @@ void List<T>::push_back(T _value)
         pointer = pointer->next;
     }
     pointer->next = std::make_shared<ListElement<T>>(_value);
+}
+
+template <typename T>
+void List<T>::push_back(T&& _value)
+{
+    if (!firstElement)
+    {
+        firstElement = std::make_shared<ListElement<T>>(std::move(_value));
+        return;
+    }
+    std::shared_ptr<ListElement<T>> pointer = firstElement;
+    while (pointer->next)
+    {
+        pointer = pointer->next;
+    }
+    pointer->next = std::make_shared<ListElement<T>>(std::move(_value));
 }
 
 template <typename T>
