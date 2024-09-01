@@ -15,8 +15,6 @@ int main() {
         return 1;
     }
     
-    // sem_t *sem_master_mutex = sem_open(SEM_MASTER_MUTEX_NAME, O_CREAT, 0666, 1);
-
     if (sem_init(&shared_memory->sem_master_mutex, 1, 1) == -1) {
         std::cerr << "Master semaphore initialization failed" << std::endl;
         return 1;
@@ -24,15 +22,16 @@ int main() {
     
     for (int i = 0; i < BUFFER_COUNT; ++i) {
         SharedBuffer& buffer = shared_memory->buffers[i];
+        buffer.idx = i;
         buffer.in = 0;
         buffer.out = 0;
         buffer.count = 0;
-        buffer.availableS = 8;
-        // for (int j = 0; j < BUFFER_SIZE; ++j) {
+        buffer.availableS = SPECIAL_MESS_COUNT;
+        for (int j = 0; j < BUFFER_SIZE; ++j) {
             for (int k = 0; k < CONSUMER_COUNT; ++k) {
-                buffer.read_by[k] = false;
+                buffer.read_by[j][k] = false;
             }
-        //}
+        }
 
         if (sem_init(&buffer.sem_mutex, 1, 1) == -1) {
             std::cerr << "Semaphore init failed" << std::endl;
@@ -46,6 +45,13 @@ int main() {
             std::cerr << "Semaphore init failed" << std::endl;
             return 1;
         }
+    }
+    
+    // Initialize special messages
+    const char* special_messages[SPECIAL_MESS_COUNT] = {"S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8"};
+    for (int i = 0; i < SPECIAL_MESS_COUNT; ++i) {
+        strncpy(shared_memory->special_mess[i], special_messages[i], MAX_VALUES - 1);
+        shared_memory->special_mess[i][MAX_VALUES - 1] = '\0';
     }
     
     munmap(shared_memory, sizeof(SharedMemory));
