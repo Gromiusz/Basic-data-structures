@@ -19,6 +19,11 @@ int main() {
         std::cerr << "Master semaphore initialization failed" << std::endl;
         return 1;
     }
+
+    if (sem_init(&shared_memory->waiting_producers, 1, 0) == -1) {
+        std::cerr << "Master semaphore initialization failed" << std::endl;
+        return 1;
+    }
     
     for (int i = 0; i < BUFFER_COUNT; ++i) {
         SharedBuffer& buffer = shared_memory->buffers[i];
@@ -47,7 +52,6 @@ int main() {
         }
     }
     
-    // Initialize special messages
     const char* special_messages[SPECIAL_MESS_COUNT] = {"S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8"};
     for (int i = 0; i < SPECIAL_MESS_COUNT; ++i) {
         strncpy(shared_memory->special_mess[i], special_messages[i], MAX_VALUES - 1);

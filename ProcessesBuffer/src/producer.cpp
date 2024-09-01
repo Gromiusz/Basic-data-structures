@@ -49,19 +49,26 @@ int main(int argc, char *argv[]) {
         int result = -1;
         shared_memory->fullBuffs_count = 0;
         
-        for (int j = 0; j < BUFFER_COUNT; ++j) {
+        for (int j = 0; j < BUFFER_COUNT; ++j) { // preparing the fullBuffs vector
             if (shared_memory->buffers[j].count == BUFFER_SIZE) {
                 shared_memory->fullBuffs[shared_memory->fullBuffs_count++] = j;
             }
         }
+
         selectBufferPut = get_random_buffer(BUFFER_COUNT - 1, shared_memory->fullBuffs, shared_memory->fullBuffs_count);
 
-        if (selectBufferPut != -2) {
-            result = 0;
-        } else {
+        if (selectBufferPut == NO_BUFF_SELECTED) {
+            waiting_producers_counter++;
             sem_post(&shared_memory->sem_master_mutex);
-            --i;
-            continue;
+            sem_wait(&shared_memory->waiting_producers);
+            waiting_producers_counter--;
+            for (int j = 0; j < BUFFER_COUNT; ++j) {
+                if (shared_memory->buffers[j].count == BUFFER_SIZE) {
+                    shared_memory->fullBuffs[shared_memory->fullBuffs_count++] = j;
+                }
+            }
+
+            selectBufferPut = get_random_buffer(BUFFER_COUNT - 1, shared_memory->fullBuffs, shared_memory->fullBuffs_count);
         }
         SharedBuffer& buffer = shared_memory->buffers[selectBufferPut];
         
@@ -94,9 +101,15 @@ int main(int argc, char *argv[]) {
             sem_post(&buffer.sem_mutex);
         }
 
+        if(waiting_consuments_counter > 0)
+        {
+            sem_post(&shared_memory->waiting_consuments);
+            sem_wait(&shared_memory->sem_master_mutex);
+        }
+
         sem_post(&shared_memory->sem_master_mutex);
 
-        sleep(1); // Simulate production delay
+        sleep(1);
     }
 
     munmap(shared_memory, sizeof(SharedMemory));

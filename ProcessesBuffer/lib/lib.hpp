@@ -20,6 +20,7 @@
 #define MAX_FULL_BUFFS 10
 #define MAX_CONSUMER_READ_BUFFS 10
 #define SPECIAL_MESS_COUNT 8
+#define NO_BUFF_SELECTED -2
 
 struct SharedBuffer {
     int idx;
@@ -37,10 +38,14 @@ struct SharedBuffer {
 struct SharedMemory {
     SharedBuffer buffers[BUFFER_COUNT];
     sem_t sem_master_mutex;
+    sem_t waiting_producers;
+    sem_t waiting_consuments;
+    unsigned waiting_producers_counter;
+    unsigned waiting_consuments_counter;
     int which_buff_cons_have_read[CONSUMER_COUNT][MAX_CONSUMER_READ_BUFFS];
     int which_buff_cons_have_read_count[CONSUMER_COUNT];
-    int fullBuffs[MAX_FULL_BUFFS];
-    int fullBuffs_count;
+    int fullBuffs[MAX_FULL_BUFFS]; // a structure that contains indexes of full buffers
+    int fullBuffs_count; // a lenght of above "vector"
     char special_mess[SPECIAL_MESS_COUNT][MAX_VALUES];
 };
 
