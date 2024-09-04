@@ -21,8 +21,6 @@ std::string consume(int consumer_id, SharedMemory* shared_memory) {
         std::string result = "Err";
         selectedBuffer = get_random_buffer(BUFFER_COUNT - 1, shared_memory->which_buff_cons_have_read[consumer_id], shared_memory->which_buff_cons_have_read_count[consumer_id]);
 
-
-
         if (selectedBuffer == NO_BUFF_SELECTED) {
             shared_memory->waiting_consuments_for_any_buff_counter++;
             sem_post(&shared_memory->sem_master_mutex);
@@ -38,6 +36,7 @@ std::string consume(int consumer_id, SharedMemory* shared_memory) {
         bool condition1 = (shared_memory->buffers[1].count == 0);
         bool condition2 = (shared_memory->buffers[2].count == 0);
 
+
         bool all_conditions[7] = {
             condition0, // shared_memory->buffers[0].count == 0
             condition1, // shared_memory->buffers[1].count == 0
@@ -48,16 +47,34 @@ std::string consume(int consumer_id, SharedMemory* shared_memory) {
             condition0 && condition1 && condition2 // shared_memory->buffers[0].count == 0 && shared_memory->buffers[1].count == 0 && shared_memory->buffers[2].count == 0
         };
 
-        for(int i = 0; i < 7; i++)
-        {
-            if(possible_buffers == fixed_vec[i] && all_conditions[i]) {
-                shared_memory->waiting_consuments_for_buff_set_counter[i]++;
+        const std::vector<int> vec_0{0};
+        const std::vector<int> vec_1{1};
+        const std::vector<int> vec_2{2};
+        const std::vector<int> vec_01{0,1};
+        const std::vector<int> vec_12{1,2};
+        const std::vector<int> vec_03{0,3};
+        const std::vector<int> vec_012{0,1,2};
+
+        std::vector<std::vector<int>> contener = {vec_0, vec_1, vec_2, vec_01, vec_12, vec_03, vec_012};
+        auto found_it = std::find(contener.begin(), contener.end(), possible_buffers);
+
+        unsigned j = std::distance(contener.begin(),found_it);
+
+        // POTRZEBUJE CZEGOŚ W RODZAJU:
+        // IF possible_buffers == vec_0: j = 0
+        // if possible_buffers == vec_1: j = 1
+
+
+        // for(int i = 0; i < 7; i++)
+        // {
+            if(all_conditions[j]) {
+                shared_memory->waiting_consuments_for_buff_set_counter[j]++;
                 sem_post(&shared_memory->sem_master_mutex);
-                sem_wait(&shared_memory->waiting_consuments_for_buff_set[i]);
-                shared_memory->waiting_consuments_for_buff_set_counter[i]--;
+                sem_wait(&shared_memory->waiting_consuments_for_buff_set[j]);
+                shared_memory->waiting_consuments_for_buff_set_counter[j]--;
                 break;
             }
-        }
+        //}
 
         if (shared_memory->buffers[selectedBuffer].count == 0) {
             //std::vector<int> possible_buffers = get_possible_buffers(BUFFER_COUNT - 1, shared_memory->which_buff_cons_have_read[consumer_id], shared_memory->which_buff_cons_have_read_count[consumer_id]);
