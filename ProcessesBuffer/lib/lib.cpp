@@ -21,6 +21,20 @@ int get_random_buffer(int max, const int* excluded, int excluded_count)
     return available_numbers[dist(gen)];
 }
 
+std::vector<int> get_possible_buffers(int max, const int* excluded, int excluded_count)
+{
+    std::vector<int> available_numbers;
+    for (int i = 0; i <= max; ++i)
+    {
+        if (std::find(excluded, excluded + excluded_count, i) == excluded + excluded_count)
+        {
+            available_numbers.push_back(i);
+        }
+    }
+
+    return available_numbers;
+}
+
 void clear_times(int buff_num, int which_buff_cons_have_read[CONSUMER_COUNT][MAX_CONSUMER_READ_BUFFS], int which_buff_cons_have_read_count[CONSUMER_COUNT])
 {
     for (int i = 0; i < CONSUMER_COUNT; ++i) {

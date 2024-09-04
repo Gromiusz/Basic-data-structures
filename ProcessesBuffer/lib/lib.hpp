@@ -21,6 +21,7 @@
 #define MAX_CONSUMER_READ_BUFFS 10
 #define SPECIAL_MESS_COUNT 8
 #define NO_BUFF_SELECTED -2
+#define BUFF_SET 7 // a b c ab bc ac abc
 
 struct SharedBuffer {
     int idx;
@@ -39,9 +40,13 @@ struct SharedMemory {
     SharedBuffer buffers[BUFFER_COUNT];
     sem_t sem_master_mutex;
     sem_t waiting_producers;
-    sem_t waiting_consuments;
+    sem_t waiting_consuments_for_concrete_buff[BUFFER_COUNT];
+    sem_t waiting_consuments_for_any_buff;
+    sem_t waiting_consuments_for_buff_set[BUFF_SET];
+    unsigned waiting_consuments_for_buff_set_counter[BUFF_SET];
     unsigned waiting_producers_counter;
-    unsigned waiting_consuments_counter;
+    unsigned waiting_consuments_for_any_buff_counter;
+    unsigned waiting_consuments_for_concrete_buff_counter[BUFFER_COUNT];
     int which_buff_cons_have_read[CONSUMER_COUNT][MAX_CONSUMER_READ_BUFFS];
     int which_buff_cons_have_read_count[CONSUMER_COUNT];
     int fullBuffs[MAX_FULL_BUFFS]; // a structure that contains indexes of full buffers
@@ -49,6 +54,7 @@ struct SharedMemory {
     char special_mess[SPECIAL_MESS_COUNT][MAX_VALUES];
 };
 
+std::vector<int> get_possible_buffers(int max, const int* excluded, int excluded_count);
 int get_random_buffer(int max, const int* excluded, int excluded_count);
 void clear_times(int buff_num, int which_buff_cons_have_read[CONSUMER_COUNT][MAX_CONSUMER_READ_BUFFS], int which_buff_cons_have_read_count[CONSUMER_COUNT]);
 void print_buffers(SharedMemory* shared_memory, std::string name, int buffer_index);

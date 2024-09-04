@@ -2,6 +2,17 @@
 #include <random>
 #include "lib.hpp"
 
+// const std::vector<int> vec_0{0};
+// const std::vector<int> vec_1{1};
+// const std::vector<int> vec_2{2};
+// const std::vector<int> vec_01{0,1};
+// const std::vector<int> vec_12{1,2};
+// const std::vector<int> vec_03{0,3};
+// const std::vector<int> vec_012{0,1,2};
+
+std::vector<int> fixed_vec[7];
+ 
+
 std::string consume(int consumer_id, SharedMemory* shared_memory) {
     while (true) {
         sleep(1);
@@ -10,14 +21,62 @@ std::string consume(int consumer_id, SharedMemory* shared_memory) {
         std::string result = "Err";
         selectedBuffer = get_random_buffer(BUFFER_COUNT - 1, shared_memory->which_buff_cons_have_read[consumer_id], shared_memory->which_buff_cons_have_read_count[consumer_id]);
 
-        if (selectedBuffer == -2) {
+
+
+        if (selectedBuffer == NO_BUFF_SELECTED) {
+            shared_memory->waiting_consuments_for_any_buff_counter++;
             sem_post(&shared_memory->sem_master_mutex);
-            return result;
+            sem_wait(&shared_memory->waiting_consuments_for_any_buff);
+            shared_memory->waiting_consuments_for_any_buff_counter--;
+            selectedBuffer = get_random_buffer(BUFFER_COUNT - 1, shared_memory->which_buff_cons_have_read[consumer_id], shared_memory->which_buff_cons_have_read_count[consumer_id]);
+            if(selectedBuffer == NO_BUFF_SELECTED) throw std::runtime_error("consumer has still no buffer to choice");
+            // return result;
         }
+        std::vector<int> possible_buffers = get_possible_buffers(BUFFER_COUNT - 1, shared_memory->which_buff_cons_have_read[consumer_id], shared_memory->which_buff_cons_have_read_count[consumer_id]);
+
+        bool condition0 = (shared_memory->buffers[0].count == 0);
+        bool condition1 = (shared_memory->buffers[1].count == 0);
+        bool condition2 = (shared_memory->buffers[2].count == 0);
+
+        bool all_conditions[7] = {
+            condition0, // shared_memory->buffers[0].count == 0
+            condition1, // shared_memory->buffers[1].count == 0
+            condition2, // shared_memory->buffers[2].count == 0
+            condition0 && condition1, // shared_memory->buffers[0].count == 0 && shared_memory->buffers[1].count == 0
+            condition1 && condition2, // shared_memory->buffers[1].count == 0 && shared_memory->buffers[2].count == 0
+            condition0 && condition2, // shared_memory->buffers[0].count == 0 && shared_memory->buffers[2].count == 0
+            condition0 && condition1 && condition2 // shared_memory->buffers[0].count == 0 && shared_memory->buffers[1].count == 0 && shared_memory->buffers[2].count == 0
+        };
+
+        for(int i = 0; i < 7; i++)
+        {
+            if(possible_buffers == fixed_vec[i] && all_conditions[i]) {
+                shared_memory->waiting_consuments_for_buff_set_counter[i]++;
+                sem_post(&shared_memory->sem_master_mutex);
+                sem_wait(&shared_memory->waiting_consuments_for_buff_set[i]);
+                shared_memory->waiting_consuments_for_buff_set_counter[i]--;
+                break;
+            }
+        }
+
         if (shared_memory->buffers[selectedBuffer].count == 0) {
-            sem_post(&shared_memory->sem_master_mutex);
-            return result;
+            //std::vector<int> possible_buffers = get_possible_buffers(BUFFER_COUNT - 1, shared_memory->which_buff_cons_have_read[consumer_id], shared_memory->which_buff_cons_have_read_count[consumer_id]);
+            possible_buffers.erase(std::remove(possible_buffers.begin(), possible_buffers.end(), selectedBuffer), possible_buffers.end());
+            while (possible_buffers.size() > 0)
+            {
+                selectedBuffer = possible_buffers.back();
+                possible_buffers.pop_back();
+                if(shared_memory->buffers[selectedBuffer].count != 0) break;
+            }
         }
+
+        // if (shared_memory->buffers[selectedBuffer].count == 0) {
+        //     shared_memory->waiting_consuments_for_concrete_buff_counter[selectedBuffer]++;
+        //     sem_post(&shared_memory->sem_master_mutex);
+        //     sem_wait(&shared_memory->waiting_consuments_for_concrete_buff[selectedBuffer]);
+        //     shared_memory->waiting_consuments_for_concrete_buff_counter[selectedBuffer]--;
+        //     return result;
+        // }
         SharedBuffer& buffer = shared_memory->buffers[selectedBuffer];
         shared_memory->which_buff_cons_have_read[consumer_id][shared_memory->which_buff_cons_have_read_count[consumer_id]++] = selectedBuffer;
 
@@ -66,6 +125,12 @@ std::string consume(int consumer_id, SharedMemory* shared_memory) {
                 shared_memory->which_buff_cons_have_read_count[consumer_id]--;
             else
                 clear_times(selectedBuffer, shared_memory->which_buff_cons_have_read, shared_memory->which_buff_cons_have_read_count);
+            
+            if(shared_memory->waiting_producers_counter > 0)
+            {
+                sem_post(&shared_memory->waiting_producers);
+                sem_wait(&shared_memory->sem_master_mutex);
+            }
         }
 
         sem_post(&buffer.sem_mutex);
@@ -99,6 +164,14 @@ int main(int argc, char *argv[]) {
         std::cerr << "Map failed" << std::endl;
         exit(1);
     }
+
+    fixed_vec[0].assign({0});
+    fixed_vec[1].assign({1});
+    fixed_vec[2].assign({2});
+    fixed_vec[3].assign({0, 1});
+    fixed_vec[4].assign({1, 2});
+    fixed_vec[5].assign({0, 2});
+    fixed_vec[6].assign({1, 2, 3});
 
     while (true){
         bool all_empty = true;
