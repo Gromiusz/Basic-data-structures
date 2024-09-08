@@ -72,9 +72,11 @@ std::string consume(int consumer_id, SharedMemory* shared_memory) {
                 sem_post(&shared_memory->sem_master_mutex);
                 sem_wait(&shared_memory->waiting_consuments_for_buff_set[j]);
                 shared_memory->waiting_consuments_for_buff_set_counter[j]--;
-                break;
+                //break;
             }
         //}
+
+        selectedBuffer = get_random_buffer(BUFFER_COUNT - 1, shared_memory->which_buff_cons_have_read[consumer_id], shared_memory->which_buff_cons_have_read_count[consumer_id]);
 
         if (shared_memory->buffers[selectedBuffer].count == 0) {
             //std::vector<int> possible_buffers = get_possible_buffers(BUFFER_COUNT - 1, shared_memory->which_buff_cons_have_read[consumer_id], shared_memory->which_buff_cons_have_read_count[consumer_id]);
@@ -135,25 +137,31 @@ std::string consume(int consumer_id, SharedMemory* shared_memory) {
         } else {
             sem_post(&buffer.sem_empty);
         }
-
         int vol2 = buffer.count;
+        sem_post(&buffer.sem_mutex);
         if (vol2 < vol1) {
-            if (!is_special_message(result.c_str(), shared_memory))
-                shared_memory->which_buff_cons_have_read_count[consumer_id]--;
-            else
-                clear_times(selectedBuffer, shared_memory->which_buff_cons_have_read, shared_memory->which_buff_cons_have_read_count);
-            
             if(shared_memory->waiting_producers_counter > 0)
             {
                 sem_post(&shared_memory->waiting_producers);
                 sem_wait(&shared_memory->sem_master_mutex);
             }
+            if (!is_special_message(result.c_str(), shared_memory))
+                shared_memory->which_buff_cons_have_read_count[consumer_id]--;
+            else
+            {
+                clear_times(selectedBuffer, shared_memory->which_buff_cons_have_read, shared_memory->which_buff_cons_have_read_count);
+                if(shared_memory->waiting_consuments_for_any_buff_counter > 0)
+                {
+                    sem_post(&shared_memory->waiting_consuments_for_any_buff);
+                    sem_wait(&shared_memory->sem_master_mutex);
+                }
+            }
         }
 
-        sem_post(&buffer.sem_mutex);
+        
         sem_post(&shared_memory->sem_master_mutex);
 
-        sleep(1);
+        //sleep(1);
         return result;
     }
 }

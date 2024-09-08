@@ -9,6 +9,7 @@ int main() {
     
     ftruncate(shm_fd, sizeof(SharedMemory));
     
+    /* -----  Initializying shared memory segment  ----- */
     SharedMemory* shared_memory = static_cast<SharedMemory*>(mmap(0, sizeof(SharedMemory), PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0));
     if (shared_memory == MAP_FAILED) {
         std::cerr << "Map failed" << std::endl;
@@ -21,10 +22,28 @@ int main() {
     }
 
     if (sem_init(&shared_memory->waiting_producers, 1, 0) == -1) {
+        std::cerr << "waiting_producers semaphore initialization failed" << std::endl;
+        return 1;
+    }
+
+    if (sem_init(&shared_memory->waiting_consuments_for_any_buff, 1, 0) == -1) {
         std::cerr << "Master semaphore initialization failed" << std::endl;
         return 1;
     }
+
+    for(int i=0; i<BUFF_SET; i++)
+    {
+        if (sem_init(&shared_memory->waiting_consuments_for_buff_set[i], 1, 0) == -1) {
+            std::cerr << "Master semaphore initialization failed" << std::endl;
+            return 1;
+        }
+        shared_memory->waiting_consuments_for_buff_set_counter[i] = 0;
+    }
+    shared_memory->waiting_producers_counter = 0;
+    shared_memory->waiting_consuments_for_any_buff_counter = 0;
     
+
+    /* -----  Initializing each buffer  ------- */
     for (int i = 0; i < BUFFER_COUNT; ++i) {
         SharedBuffer& buffer = shared_memory->buffers[i];
         buffer.idx = i;

@@ -63,6 +63,7 @@ int main(int argc, char *argv[]) {
             sem_post(&shared_memory->sem_master_mutex);
             sem_wait(&shared_memory->waiting_producers);
             shared_memory->waiting_producers_counter--;
+            shared_memory->fullBuffs_count = 0;
             for (int j = 0; j < BUFFER_COUNT; ++j) {
                 if (shared_memory->buffers[j].count == BUFFER_SIZE) {
                     shared_memory->fullBuffs[shared_memory->fullBuffs_count++] = j;
@@ -88,10 +89,8 @@ int main(int argc, char *argv[]) {
                 buffer.count++;
                 print_buffers(shared_memory, name, selectBufferPut);
                 sem_post(&buffer.sem_empty);
-                sem_post(&buffer.sem_mutex);
             } else {
                 sem_post(&buffer.sem_full);
-                sem_post(&buffer.sem_mutex);
             }
         } else {
             strncpy(buffer.values[buffer.in], str.c_str(), MAX_VALUES - 1);
@@ -100,15 +99,37 @@ int main(int argc, char *argv[]) {
             buffer.count++;
             print_buffers(shared_memory, name, selectBufferPut);
             sem_post(&buffer.sem_empty);
-            sem_post(&buffer.sem_mutex);
+            
         }
+        sem_post(&buffer.sem_mutex);
 
-        if(shared_memory->waiting_consuments_counter > 0)
+        std::vector<unsigned> buffers_set_to_continue;
+        if(buffer.idx == 0)
         {
-            sem_post(&shared_memory->waiting_consuments);
-            sem_wait(&shared_memory->sem_master_mutex);
+            buffers_set_to_continue.assign({6, 5, 3, 0}); // a b c ab bc ac abc
+        }
+        else if(buffer.idx == 1)
+        {
+            buffers_set_to_continue.assign({6, 4, 3, 1}); // a b c ab bc ac abc
+        }
+        else if(buffer.idx == 2)
+        {
+            buffers_set_to_continue.assign({6, 5, 4, 2}); // a b c ab bc ac abc
         }
 
+        while(buffers_set_to_continue.size() > 0)
+        {
+            int i = buffers_set_to_continue.back();
+            buffers_set_to_continue.pop_back();
+            if(shared_memory->waiting_consuments_for_buff_set_counter[i] > 0)
+            {
+                //sem_post(&buffer.sem_mutex);
+                sem_post(&shared_memory->waiting_consuments_for_buff_set[i]);
+                sem_wait(&shared_memory->sem_master_mutex);
+                //sem_wait(&buffer.sem_mutex);
+                break;
+            }
+        }
         sem_post(&shared_memory->sem_master_mutex);
 
         sleep(1);

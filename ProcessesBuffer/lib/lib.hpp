@@ -40,13 +40,11 @@ struct SharedMemory {
     SharedBuffer buffers[BUFFER_COUNT];
     sem_t sem_master_mutex;
     sem_t waiting_producers;
-    sem_t waiting_consuments_for_concrete_buff[BUFFER_COUNT];
     sem_t waiting_consuments_for_any_buff;
     sem_t waiting_consuments_for_buff_set[BUFF_SET];
     unsigned waiting_consuments_for_buff_set_counter[BUFF_SET];
     unsigned waiting_producers_counter;
     unsigned waiting_consuments_for_any_buff_counter;
-    unsigned waiting_consuments_for_concrete_buff_counter[BUFFER_COUNT];
     int which_buff_cons_have_read[CONSUMER_COUNT][MAX_CONSUMER_READ_BUFFS];
     int which_buff_cons_have_read_count[CONSUMER_COUNT];
     int fullBuffs[MAX_FULL_BUFFS]; // a structure that contains indexes of full buffers
