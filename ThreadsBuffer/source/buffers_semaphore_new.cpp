@@ -33,31 +33,14 @@ private:
 	Semaphore empty;
 	Semaphore full;
 	Semaphore sem[8]; // A B C ... H
-	// Semaphore semA;
-	// Semaphore semB;
-	// Semaphore semC;
-	// Semaphore semD;
-	// Semaphore semE;
-	// Semaphore semF;
-	// Semaphore semG;
-	// Semaphore semH;
 	Semaphore semS;
 	int available_S;
 	int counter;
-	// bool readA = false;
-	// bool readB = false;
-	// bool readC = false;
-	// bool readD = false;
-	// bool readE = false;
-	// bool readF = false;
-	// bool readG = false;
-	// bool readH = false;
 	bool read_[8]; // A B C ... H
 	bool do_not_print[8];
 	// std::vector<bool*> readVec;
 	static Semaphore printSem;
 	
-
 	// std::vector<std::string> values;
 	std::set<std::string> special_mess = {"S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8"};
 
@@ -111,11 +94,6 @@ public:
 			read_[i] = false;
 			do_not_print[i]=true;
 		}
-		// readVec.push_back(&read_[0]);
-        // readVec.push_back(&read_[1]);
-        // readVec.push_back(&read_[2]);
-        // readVec.push_back(&read_[3]);
-
 	}
 	int get_buff_size()
 	{
@@ -123,22 +101,12 @@ public:
 	}
 	bool is_empty()
 	{
-		if(counter==0){
-			return true;
-		}
-		else{
-			return false;
-		}
+		return counter == 0;
 	}
 
 	bool is_full()
 	{
-		if(values.size()==bufferSize){
-			return true;
-		}
-		else{
-			return false;
-		}
+		return values.size()==bufferSize;
 	}
 
 	void put(std::string value)
@@ -220,285 +188,6 @@ public:
 		return v;
 	}
 
-	// std::string getA()
-	// {
-	// 	semA.p();
-	// 	empty.p();
-	// 	mutex.p();
-	// 	// read element from buffer (without removing)
-	// 	std::string v = values.front();
-	// 	readA = true;
-	// 	print("A read");
-	// 	if(special_mess.count(v)){
-	// 		semS.v();
-	// 		available_S++;
-	// 		values.erase(values.begin());
-	// 		print("A remove");
-	// 		readA = false;
-	// 		semA.v();
-	// 		full.v();
-	// 		counter--;
-	// 	}
-	// 	else if (readB && readC && readD && readE && readF && readG && readH){
-	// 		// remove element from buffer
-	// 		values.erase(values.begin());
-	// 		print("A remove");
-	// 		readA = readB = readC = readD = readE = readF = readG = readH = false;
-	// 		semA.v(); semB.v(); semC.v(); semD.v(); semE.v(); semF.v(); semG.v(); semH.v();
-	// 		full.v();
-	// 		counter--;
-	// 	}
-	// 	else{
-	// 		empty.v();
-	// 	}
-	// 	mutex.v();
-	// 	return v;
-	// }
-
-	// std::string getB()
-	// {
-	// 	semB.p();
-	// 	empty.p();
-	// 	mutex.p();
-	// 	// read element from buffer (without removing)
-	// 	std::string v = values.front();
-	// 	readB = true;
-	// 	print("B read");
-	// 	if(special_mess.count(v)){
-	// 		semS.v();
-	// 		available_S++;
-	// 		values.erase(values.begin());
-	// 		print("B remove");
-	// 		readB = false;
-	// 		semB.v();
-	// 		full.v();
-	// 		counter--;
-	// 	}
-	// 	else if (readA && readC && readD && readE && readF && readG && readH)
-	// 	{
-	// 		// remove element from buffer
-	// 		values.erase(values.begin());
-	// 		print("B rmove");
-	// 		readA = readB = readC = readD = readE = readF = readG = readH = false;
-	// 		semA.v(); semB.v(); semC.v(); semD.v(); semE.v(); semF.v(); semG.v(); semH.v();
-	// 		full.v();
-	// 		counter--;
-	// 	}
-	// 	else
-	// 		empty.v();
-	// 	mutex.v();
-	// 	return v;
-	// }
-
-	// std::string getC()
-	// {
-	// 	semC.p();
-	// 	empty.p();
-	// 	mutex.p();
-	// 	// read element from buffer (without removing)
-	// 	std::string v = values.front();
-	// 	readC = true;
-	// 	print("C read");
-	// 	if(special_mess.count(v)){
-	// 		semS.v();
-	// 		available_S++;
-	// 		values.erase(values.begin());
-	// 		print("C remove");
-	// 		readC = false;
-	// 		semC.v();
-	// 		full.v();
-	// 		counter--;
-	// 	}
-	// 	else if (readB && readA && readD && readE && readF && readG && readH)
-	// 	{
-	// 		// remove element from buffer
-	// 		values.erase(values.begin());
-	// 		print("C rmove");
-	// 		readA = readB = readC = readD = readE = readF = readG = readH = false;
-	// 		semA.v(); semB.v(); semC.v(); semD.v(); semE.v(); semF.v(); semG.v(); semH.v();
-	// 		full.v();
-	// 		counter--;
-	// 	}
-	// 	else
-	// 		empty.v();
-	// 	mutex.v();
-	// 	return v;
-	// }
-
-	// std::string getD()
-	// {
-	// 	semD.p();
-	// 	empty.p();
-	// 	mutex.p();
-	// 	// read element from buffer (without removing)
-	// 	std::string v = values.front();
-	// 	readD = true;
-	// 	print("D read");
-	// 	if(special_mess.count(v)){
-	// 		semS.v();
-	// 		available_S++;
-	// 		values.erase(values.begin());
-	// 		print("D remove");
-	// 		readD = false;
-	// 		semD.v();
-	// 		full.v();
-	// 		counter--;
-	// 	}
-	// 	else if (readB && readC && readA && readE && readF && readG && readH)
-	// 	{
-	// 		// remove element from buffer
-	// 		values.erase(values.begin());
-	// 		print("D rmove");
-	// 		readA = readB = readC = readD = readE = readF = readG = readH = false;
-	// 		semA.v(); semB.v(); semC.v(); semD.v(); semE.v(); semF.v(); semG.v(); semH.v();
-	// 		full.v();
-	// 		counter--;
-	// 	}
-	// 	else
-	// 		empty.v();
-	// 	mutex.v();
-	// 	return v;
-	// }
-
-	// std::string getE()
-	// {
-	// 	semE.p();
-	// 	empty.p();
-	// 	mutex.p();
-	// 	// read element from buffer (without removing)
-	// 	std::string v = values.front();
-	// 	readE = true;
-	// 	print("E read");
-	// 	if(special_mess.count(v)){
-	// 		semS.v();
-	// 		available_S++;
-	// 		values.erase(values.begin());
-	// 		print("E remove");
-	// 		readE = false;
-	// 		semE.v();
-	// 		full.v();
-	// 		counter--;
-	// 	}
-	// 	else if (readB && readC && readA && readD && readF && readG && readH)
-	// 	{
-	// 		// remove element from buffer
-	// 		values.erase(values.begin());
-	// 		print("E rmove");
-	// 		readA = readB = readC = readD = readE = readF = readG = readH = false;
-	// 		semA.v(); semB.v(); semC.v(); semD.v(); semE.v(); semF.v(); semG.v(); semH.v();
-	// 		full.v();
-	// 		counter--;
-	// 	}
-	// 	else
-	// 		empty.v();
-	// 	mutex.v();
-	// 	return v;
-	// }
-
-	// std::string getF()
-	// {
-	// 	semF.p();
-	// 	empty.p();
-	// 	mutex.p();
-	// 	// read element from buffer (without removing)
-	// 	std::string v = values.front();
-	// 	readF = true;
-	// 	print("F read");
-	// 	if(special_mess.count(v)){
-	// 		semS.v();
-	// 		available_S++;
-	// 		values.erase(values.begin());
-	// 		print("F remove");
-	// 		readF = false;
-	// 		semF.v();
-	// 		full.v();
-	// 		counter--;
-	// 	}
-	// 	else if (readB && readC && readA && readD && readE && readG && readH)
-	// 	{
-	// 		// remove element from buffer
-	// 		values.erase(values.begin());
-	// 		print("F rmove");
-	// 		readA = readB = readC = readD = readE = readF = readG = readH = false;
-	// 		semA.v(); semB.v(); semC.v(); semD.v(); semE.v(); semF.v(); semG.v(); semH.v();
-	// 		full.v();
-	// 		counter--;
-	// 	}
-	// 	else
-	// 		empty.v();
-	// 	mutex.v();
-	// 	return v;
-	// }
-
-	// std::string getG()
-	// {
-	// 	semG.p();
-	// 	empty.p();
-	// 	mutex.p();
-	// 	// read element from buffer (without removing)
-	// 	std::string v = values.front();
-	// 	readG = true;
-	// 	print("G read");
-	// 	if(special_mess.count(v)){
-	// 		semS.v();
-	// 		available_S++;
-	// 		values.erase(values.begin());
-	// 		print("G remove");
-	// 		readG = false;
-	// 		semG.v();
-	// 		full.v();
-	// 		counter--;
-	// 	}
-	// 	else if (readB && readC && readA && readD && readE && readF && readH)
-	// 	{
-	// 		// remove element from buffer
-	// 		values.erase(values.begin());
-	// 		print("G rmove");
-	// 		readA = readB = readC = readD = readE = readF = readG = readH = false;
-	// 		semA.v(); semB.v(); semC.v(); semD.v(); semE.v(); semF.v(); semG.v(); semH.v();
-	// 		full.v();
-	// 		counter--;
-	// 	}
-	// 	else
-	// 		empty.v();
-	// 	mutex.v();
-	// 	return v;
-	// }
-
-	// std::string getH()
-	// {
-	// 	semH.p();
-	// 	empty.p();
-	// 	mutex.p();
-	// 	// read element from buffer (without removing)
-	// 	std::string v = values.front();
-	// 	readH = true;
-	// 	print("H read");
-	// 	if(special_mess.count(v)){
-	// 		semS.v();
-	// 		available_S++;
-	// 		values.erase(values.begin());
-	// 		print("H remove");
-	// 		readH = false;
-	// 		semH.v();
-	// 		full.v();
-	// 		counter--;
-	// 	}
-	// 	else if (readB && readC && readA && readD && readE && readF && readG)
-	// 	{
-	// 		// remove element from buffer
-	// 		values.erase(values.begin());
-	// 		print("H rmove");
-	// 		readA = readB = readC = readD = readE = readF = readG = readH = false;
-	// 		semA.v(); semB.v(); semC.v(); semD.v(); semE.v(); semF.v(); semG.v(); semH.v();
-	// 		full.v();
-	// 		counter--;
-	// 	}
-	// 	else
-	// 		empty.v();
-	// 	mutex.v();
-	// 	return v;
-	// }
 };
 
 class BufferCollection{
@@ -506,14 +195,6 @@ class BufferCollection{
 	
 
 public:
-	// std::vector<int> A_times;
-	// std::vector<int> B_times;
-	// std::vector<int> C_times;
-	// std::vector<int> D_times;
-	// std::vector<int> E_times;
-	// std::vector<int> F_times;
-	// std::vector<int> G_times;
-	// std::vector<int> H_times;
 	std::vector<int> times[CONSUMERS_COUNT];
 	Semaphore getSem;
 	int buffIndexes;
@@ -542,22 +223,6 @@ public:
 
 	void clear_times(int buff_num)
 	{
-		// A_times.erase(std::remove_if(A_times.begin(), A_times.end(), [buff_num](int num) {
-        // return num == buff_num;}), A_times.end());
-		// B_times.erase(std::remove_if(B_times.begin(), B_times.end(), [buff_num](int num) {
-        // return num == buff_num;}), B_times.end());
-		// C_times.erase(std::remove_if(C_times.begin(), C_times.end(), [buff_num](int num) {
-        // return num == buff_num;}), C_times.end());
-		// D_times.erase(std::remove_if(D_times.begin(), D_times.end(), [buff_num](int num) {
-        // return num == buff_num;}), D_times.end());
-		// E_times.erase(std::remove_if(E_times.begin(), E_times.end(), [buff_num](int num) {
-        // return num == buff_num;}), E_times.end());
-		// F_times.erase(std::remove_if(F_times.begin(), F_times.end(), [buff_num](int num) {
-        // return num == buff_num;}), F_times.end());
-		// G_times.erase(std::remove_if(G_times.begin(), G_times.end(), [buff_num](int num) {
-        // return num == buff_num;}), G_times.end());
-		// H_times.erase(std::remove_if(H_times.begin(), H_times.end(), [buff_num](int num) {
-        // return num == buff_num;}), H_times.end());
 		for(unsigned i=0; i<CONSUMERS_COUNT;i++)
 		{
 			times[i].erase(std::remove_if(times[i].begin(), times[i].end(), [buff_num](int num) {
@@ -614,7 +279,6 @@ public:
 		int vol2 = bufferCollection[selectedBuffer]->get_buff_size();
 		if(vol2<vol1)
 			clear_times(selectedBuffer);
-		// return (bufferCollection[selectedBuffer]->*getter)();
 		getSem.v();
 		return result;
 	}
