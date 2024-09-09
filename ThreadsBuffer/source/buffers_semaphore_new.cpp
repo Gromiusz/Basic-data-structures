@@ -207,11 +207,8 @@ public:
 			print(whoStr + " remove");
 			for(unsigned i=0;i<CONSUMERS_COUNT;i++)
 			{
-				if(i != who)
-				{
-					read_[i] = false;
-					sem[i].v();
-				}
+				read_[i] = false;
+				sem[i].v();
 			}
 			full.v();
 			counter--;
