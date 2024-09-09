@@ -17,12 +17,14 @@
 #define ANSI_COLOR_CYAN    "\x1b[36m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
 
+#define NO_BUFF_SELECTED -2
+
 constexpr unsigned CONSUMERS_COUNT = 8;
+constexpr unsigned BUFFERS_COUNT = 3;
+constexpr unsigned BUFFER_SIZE = 10;
+constexpr unsigned THREADS_COUNT = 13;  // number of threads 13
+constexpr unsigned ALL_BUFFERS_SET = 7; // a b c ab ac abc
 
-
-int const threadsCounts = 13;  // number of threads 13
-
-int const bufferSize = 10;
 int probability;
 int delay;
 
@@ -87,7 +89,7 @@ private:
 public:
 	std::vector<std::string> values;
 	int buffIndex;
-	Buffer() : mutex(1), empty(0), full(bufferSize), sem{Semaphore(1), Semaphore(1),Semaphore(1),Semaphore(1),Semaphore(1),Semaphore(1),Semaphore(1),Semaphore(1)}, semS(CONSUMERS_COUNT), available_S(CONSUMERS_COUNT), counter(0)
+	Buffer() : mutex(1), empty(0), full(BUFFER_SIZE), sem{Semaphore(1), Semaphore(1),Semaphore(1),Semaphore(1),Semaphore(1),Semaphore(1),Semaphore(1),Semaphore(1)}, semS(CONSUMERS_COUNT), available_S(CONSUMERS_COUNT), counter(0)
 	{
 		for(int i=0; i<CONSUMERS_COUNT; i++)
 		{
@@ -106,7 +108,7 @@ public:
 
 	bool is_full()
 	{
-		return values.size()==bufferSize;
+		return values.size()==BUFFER_SIZE;
 	}
 
 	void put(std::string value)
@@ -121,11 +123,9 @@ public:
 				print("Producer");
 				empty.v();
 				counter++;
-				mutex.v();
 			}
 			else{
 				full.v();
-				mutex.v();
 			}
 		}
 		else
@@ -134,8 +134,8 @@ public:
 			print("Producer");
 			empty.v();
 			counter++;
-			mutex.v();
 		}
+		mutex.v();
 	}
 
 	std::string get(unsigned who)
@@ -159,18 +159,18 @@ public:
 			}
 		}
 
-		if(special_mess.count(v)){
-			semS.v();
-			available_S++;
+		if(!special_mess.count(v)){
 			values.erase(values.begin());
 			print(whoStr + " remove");
 			read_[who] = false;
+			counter--;
 			sem[who].v();
 			full.v();
-			counter--;
 		}
 		else if (all_read_except_who){
 			// remove element from buffer
+			available_S++;
+			semS.v();
 			values.erase(values.begin());
 			print(whoStr + " remove");
 			for(unsigned i=0;i<CONSUMERS_COUNT;i++)
@@ -178,8 +178,8 @@ public:
 				read_[i] = false;
 				sem[i].v();
 			}
-			full.v();
 			counter--;
+			full.v();
 		}
 		else{
 			empty.v();
@@ -192,16 +192,53 @@ public:
 
 class BufferCollection{
 	std::vector<Buffer*> bufferCollection;
-	
+	std::vector<int> get_possible_buffers(int max, const int* excluded, int excluded_count)
+	{
+		std::vector<int> available_numbers;
+		for (int i = 0; i <= max; ++i)
+		{
+			if (std::find(excluded, excluded + excluded_count, i) == excluded + excluded_count)
+			{
+				available_numbers.push_back(i);
+			}
+		}
+
+		return available_numbers;
+	}
 
 public:
+	
 	std::vector<int> times[CONSUMERS_COUNT];
-	Semaphore getSem;
+	Semaphore masterMutex;
+	Semaphore waiting_producers;
+	Semaphore waiting_consuments_for_any_buff;
+    Semaphore waiting_consuments_for_buff_set[ALL_BUFFERS_SET];
+	std::set<std::string> special_mess = {"S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8"};
+
 	int buffIndexes;
 
 	int visit_left;
 
-	BufferCollection(): visit_left(0), getSem(1), buffIndexes(0) {};
+	unsigned waiting_consuments_for_buff_set_counter[ALL_BUFFERS_SET];
+    unsigned waiting_producers_counter = 0;
+    unsigned waiting_consuments_for_any_buff_counter = 0;
+    int which_buff_cons_have_read[CONSUMERS_COUNT][BUFFER_SIZE];
+    int which_buff_cons_have_read_count[CONSUMERS_COUNT];
+    int fullBuffs[BUFFER_SIZE]; // a structure that contains indexes of full buffers
+    int fullBuffs_count = 0; // a lenght of above "vector"
+    //char special_mess[SPECIAL_MESS_COUNT][MAX_VALUES];
+
+	BufferCollection(): visit_left(0), masterMutex(1), waiting_producers(0), waiting_consuments_for_any_buff(0), buffIndexes(0), waiting_consuments_for_buff_set{Semaphore(0), Semaphore(0), Semaphore(0), Semaphore(0), Semaphore(0), Semaphore(0), Semaphore(0)} 
+	{
+		for(int i=0; i<ALL_BUFFERS_SET; i++)
+		{
+			waiting_consuments_for_buff_set_counter[i] = 0;
+		}
+		for(int i=0; i<CONSUMERS_COUNT; i++)
+		{
+			which_buff_cons_have_read_count[i] = 0;
+		}
+	}
 
 	void add_buffer(Buffer * buffer)
 	{
@@ -221,74 +258,261 @@ public:
 		return odp;
 	}
 
-	void clear_times(int buff_num)
+	// void clear_times(int buff_num)
+	// {
+	// 	for(unsigned i=0; i<CONSUMERS_COUNT;i++)
+	// 	{
+	// 		times[i].erase(std::remove_if(times[i].begin(), times[i].end(), [buff_num](int num) {
+    //     		return num == buff_num;}), times[i].end());
+	// 	}
+	// }
+	void clear_times(int buff_num, int which_buff_cons_have_read[CONSUMERS_COUNT][BUFFER_SIZE], int which_buff_cons_have_read_count[CONSUMERS_COUNT])
 	{
-		for(unsigned i=0; i<CONSUMERS_COUNT;i++)
-		{
-			times[i].erase(std::remove_if(times[i].begin(), times[i].end(), [buff_num](int num) {
-        		return num == buff_num;}), times[i].end());
+		for (int i = 0; i < CONSUMERS_COUNT; ++i) {
+			int new_count = 0;
+			for (int j = 0; j < which_buff_cons_have_read_count[i]; ++j) {
+				if (which_buff_cons_have_read[i][j] != buff_num) {
+					which_buff_cons_have_read[i][new_count++] = which_buff_cons_have_read[i][j];
+				}
+			}
+			which_buff_cons_have_read_count[i] = new_count;
 		}
 	}
 
 	int put(std::string value) // was void
 	{
-		getSem.p();
+		masterMutex.p();
 		int selectBufferPut = -1;
 		int tryCounter = 0;
 		int result = -1;
-		do{
-			selectBufferPut = get_random_buffer(bufferCollection.size()-1);
-			tryCounter++;
-		}while(bufferCollection[selectBufferPut]->is_full() && tryCounter<10);
-		if(tryCounter<10){
-			bufferCollection[selectBufferPut]->put(value);
-			result = 0;
-		}
-		getSem.v();
+
+		fullBuffs_count = 0;
+		for (int j = 0; j < BUFFERS_COUNT; ++j) { // preparing the fullBuffs vector
+            if (bufferCollection[j]->is_full()) {
+                fullBuffs[fullBuffs_count++] = j;
+            }
+        }
+
+        selectBufferPut = get_random_buffer(BUFFERS_COUNT - 1, fullBuffs, fullBuffs_count);
+
+        if (selectBufferPut == NO_BUFF_SELECTED) {
+            waiting_producers_counter++;
+			masterMutex.v();
+			waiting_producers.p();
+            waiting_producers_counter--;
+
+            fullBuffs_count = 0;
+            for (int j = 0; j < BUFFERS_COUNT; ++j) {
+                if (bufferCollection[j]->is_full()) {
+                    fullBuffs[fullBuffs_count++] = j;
+                }
+            }
+
+            selectBufferPut = get_random_buffer(BUFFERS_COUNT - 1, fullBuffs, fullBuffs_count);
+            if(selectBufferPut == NO_BUFF_SELECTED) throw std::runtime_error("producer has still no buffer to choice");
+        }
+		bufferCollection[selectBufferPut]->put(value);
+
+		std::vector<unsigned> buffers_set_to_continue;
+        if(selectBufferPut == 0)
+        {
+            buffers_set_to_continue.assign({6, 5, 3, 0}); // a b c ab bc ac abc
+        }
+        else if(selectBufferPut == 1)
+        {
+            buffers_set_to_continue.assign({6, 4, 3, 1}); // a b c ab bc ac abc
+        }
+        else if(selectBufferPut == 2)
+        {
+            buffers_set_to_continue.assign({6, 5, 4, 2}); // a b c ab bc ac abc
+        }
+
+        while(buffers_set_to_continue.size() > 0)
+        {
+            int i = buffers_set_to_continue.back();
+            buffers_set_to_continue.pop_back();
+            if(waiting_consuments_for_buff_set_counter[i] > 0)
+            {
+            	waiting_consuments_for_buff_set[i].v();
+                masterMutex.p();
+                break;
+            }
+        }
+		// do{
+		// 	selectBufferPut = get_random_buffer(bufferCollection.size()-1);
+		// 	tryCounter++;
+		// }while(bufferCollection[selectBufferPut]->is_full() && tryCounter<10);
+		// if(tryCounter<10){
+		// 	bufferCollection[selectBufferPut]->put(value);
+		// 	result = 0;
+		// }
+		masterMutex.v();
 		return result;
 	}
 
 	template<typename Getter, typename TimesVec>
 	std::string get(Getter getter, TimesVec& timesVec, const unsigned& who)
 	{
-		getSem.p();
+		masterMutex.p();
 		int selectedBuffer=-1;
-		int tries = 0;
-		do{
-			do{
-				selectedBuffer = get_random_buffer(bufferCollection.size()-1);
-				tries++;
-				if(tries>20){
-					std::string result = "Err";
-					getSem.v();
-					return result;
-				}
-			}while (std::find(timesVec.begin(), timesVec.end(), selectedBuffer) != timesVec.end());
-			tries++;
-			if(tries>20){
-				std::string result = "Err";
-				getSem.v();
-				return result;
-			}
+		// int tries = 0;
+		// do{
+		// 	do{
+		// 		selectedBuffer = get_random_buffer(bufferCollection.size()-1);
+		// 		tries++;
+		// 		if(tries>20){
+		// 			std::string result = "Err";
+		// 			masterMutex.v();
+		// 			return result;
+		// 		}
+		// 	}while (std::find(timesVec.begin(), timesVec.end(), selectedBuffer) != timesVec.end());
+		// 	tries++;
+		// 	if(tries>20){
+		// 		std::string result = "Err";
+		// 		masterMutex.v();
+		// 		return result;
+		// 	}
 
-		}while(bufferCollection[selectedBuffer]->is_empty());
-		timesVec.push_back(selectedBuffer);
-		
+		// }while(bufferCollection[selectedBuffer]->is_empty());
+		// timesVec.push_back(selectedBuffer);
+		std::string result = "Err";
+        selectedBuffer = get_random_buffer(BUFFERS_COUNT - 1, which_buff_cons_have_read[who], which_buff_cons_have_read_count[who]);
+
+        if (selectedBuffer == NO_BUFF_SELECTED) {
+            waiting_consuments_for_any_buff_counter++;
+            masterMutex.v();
+            waiting_consuments_for_any_buff.p();
+            waiting_consuments_for_any_buff_counter--;
+            selectedBuffer = get_random_buffer(BUFFERS_COUNT - 1, which_buff_cons_have_read[who], which_buff_cons_have_read_count[who]);
+            if(selectedBuffer == NO_BUFF_SELECTED) throw std::runtime_error("consumer has still no buffer to choice");
+            // return result;
+        }
+        std::vector<int> possible_buffers = get_possible_buffers(BUFFERS_COUNT - 1, which_buff_cons_have_read[who], which_buff_cons_have_read_count[who]);
+
+        bool condition0 = bufferCollection[0]->is_empty();
+        bool condition1 = bufferCollection[1]->is_empty();
+        bool condition2 = bufferCollection[2]->is_empty();
+
+
+        bool all_conditions[7] = {
+            condition0, 
+            condition1, // shared_memory->buffers[1].count == 0
+            condition2, // shared_memory->buffers[2].count == 0
+            condition0 && condition1, // shared_memory->buffers[0].count == 0 && shared_memory->buffers[1].count == 0
+            condition1 && condition2, // shared_memory->buffers[1].count == 0 && shared_memory->buffers[2].count == 0
+            condition0 && condition2, // shared_memory->buffers[0].count == 0 && shared_memory->buffers[2].count == 0
+            condition0 && condition1 && condition2 // shared_memory->buffers[0].count == 0 && shared_memory->buffers[1].count == 0 && shared_memory->buffers[2].count == 0
+        };
+
+        const std::vector<int> vec_0{0};
+        const std::vector<int> vec_1{1};
+        const std::vector<int> vec_2{2};
+        const std::vector<int> vec_01{0,1};
+        const std::vector<int> vec_12{1,2};
+		const std::vector<int> vec_02{0,2};
+        const std::vector<int> vec_012{0,1,2};
+
+        std::vector<std::vector<int>> contener = {vec_0, vec_1, vec_2, vec_01, vec_12, vec_02, vec_012};
+        auto found_it = std::find(contener.begin(), contener.end(), possible_buffers);
+
+        unsigned j = std::distance(contener.begin(),found_it);
+
+        // POTRZEBUJE CZEGOŚ W RODZAJU:
+        // IF possible_buffers == vec_0: j = 0
+        // if possible_buffers == vec_1: j = 1
+
+
+        // for(int i = 0; i < 7; i++)
+        // {
+            if(all_conditions[j]) {
+                waiting_consuments_for_buff_set_counter[j]++;
+                masterMutex.v();
+                waiting_consuments_for_buff_set[j].p();
+                waiting_consuments_for_buff_set_counter[j]--;
+                //break;
+            }
+        //}
+
+        selectedBuffer = get_random_buffer(BUFFERS_COUNT - 1, which_buff_cons_have_read[who], which_buff_cons_have_read_count[who]);
+
+        if (bufferCollection[selectedBuffer]->is_empty()) {
+            //std::vector<int> possible_buffers = get_possible_buffers(BUFFER_COUNT - 1, shared_memory->which_buff_cons_have_read[who], shared_memory->which_buff_cons_have_read_count[who]);
+            possible_buffers.erase(std::remove(possible_buffers.begin(), possible_buffers.end(), selectedBuffer), possible_buffers.end());
+            while (possible_buffers.size() > 0)
+            {
+                selectedBuffer = possible_buffers.back();
+                possible_buffers.pop_back();
+                if(!bufferCollection[selectedBuffer]->is_empty()) break;
+            }
+        }
+		which_buff_cons_have_read[who][which_buff_cons_have_read_count[who]++] = selectedBuffer;
 		int vol1 = bufferCollection[selectedBuffer]->get_buff_size();
-		std::string result = (bufferCollection[selectedBuffer]->*getter)(who);
+		result = (bufferCollection[selectedBuffer]->*getter)(who);
 		int vol2 = bufferCollection[selectedBuffer]->get_buff_size();
 		if(vol2<vol1)
-			clear_times(selectedBuffer);
-		getSem.v();
+		{
+			if (!special_mess.count(result))
+                which_buff_cons_have_read_count[who]--;
+            else
+            {
+				clear_times(selectedBuffer, which_buff_cons_have_read, which_buff_cons_have_read_count);
+                //clear_times(selectedBuffer);
+                if(waiting_consuments_for_any_buff_counter > 0)
+                {
+					waiting_consuments_for_any_buff.v();
+					masterMutex.p();
+                }
+            }
+			if(waiting_producers_counter > 0)
+            {
+				waiting_producers.v();
+				masterMutex.p();
+            }
+			// which_buff_cons_have_read_count[who]--;
+			// if (special_mess.count(result))  
+			// {
+			// 	clear_times(selectedBuffer, which_buff_cons_have_read, which_buff_cons_have_read_count);
+            //     //clear_times(selectedBuffer);
+            //     if(waiting_consuments_for_any_buff_counter > 0)
+            //     {
+			// 		waiting_consuments_for_any_buff.v();
+			// 		masterMutex.p();
+            //     }
+            // }
+			// else if(waiting_producers_counter > 0)
+            // {
+			// 	waiting_producers.v();
+			// 	masterMutex.p();
+            // }
+		}
+			
+		masterMutex.v();
 		return result;
 	}
 
-	int get_random_buffer(int max)
+	int get_random_buffer(int max, const int* excluded, int excluded_count)
 	{
+		// std::random_device rd;
+    	// std::mt19937 gen(rd());
+    	// std::uniform_int_distribution<> selectBuffer(0, max);
+		// return selectBuffer(gen);
+		std::vector<int> available_numbers;
+		for (int i = 0; i <= max; ++i)
+		{
+			if (std::find(excluded, excluded + excluded_count, i) == excluded + excluded_count)
+			{
+				available_numbers.push_back(i);
+			}
+		}
+		if (available_numbers.empty())
+		{
+			return -2;
+		}
 		std::random_device rd;
-    	std::mt19937 gen(rd());
-    	std::uniform_int_distribution<> selectBuffer(0, max);
-		return selectBuffer(gen);
+		std::mt19937 gen(rd());
+		std::uniform_int_distribution<> dist(0, available_numbers.size() - 1);
+
+		return available_numbers[dist(gen)];
 	}
 };
 
@@ -374,7 +598,7 @@ int main(int argc, char *argv[]) {
 	buffer.add_buffer(&buff1);
 	buffer.add_buffer(&buff2);
 	buffer.add_buffer(&buff3);
-	HANDLE tid[threadsCounts];
+	HANDLE tid[THREADS_COUNT];
 	DWORD id;
 
 	tid[0] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)threadProd, 0, 0, &id);
@@ -391,14 +615,14 @@ int main(int argc, char *argv[]) {
 	tid[11] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)threadConsG, 0, 0, &id);
 	tid[12] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)threadConsH, 0, 0, &id);
 
-	for (int i = 0; i <= threadsCounts; i++)
+	for (int i = 0; i <= THREADS_COUNT; i++)
 		WaitForSingleObject(tid[i], INFINITE);
 #else
 
 	buffer.add_buffer(&buff1);
 	buffer.add_buffer(&buff2);
 	buffer.add_buffer(&buff3);
-	pthread_t tid[threadsCounts];
+	pthread_t tid[THREADS_COUNT];
 
 	// pthread_create(&(tid[0]), NULL, threadProd, NULL);
 	// pthread_create(&(tid[1]), NULL, threadConsA, NULL);
@@ -427,7 +651,7 @@ int main(int argc, char *argv[]) {
 	pthread_create(&(tid[11]), NULL, threadCons, &tArgH);
 	pthread_create(&(tid[12]), NULL, threadProd, NULL);
 
-	for (int i = 0; i < threadsCounts; i++)
+	for (int i = 0; i < THREADS_COUNT; i++)
 		pthread_join(tid[i], (void**)NULL);
 	
 #endif
