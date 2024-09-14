@@ -451,6 +451,7 @@ public:
 		int vol2 = bufferCollection[selectedBuffer]->get_buff_size();
 		if(vol2<vol1)
 		{
+			bool one = false;
 			if (!special_mess.count(result))
                 which_buff_cons_have_read_count[who]--;
             else
@@ -461,9 +462,10 @@ public:
                 {
 					waiting_consuments_for_any_buff.v();
 					masterMutex.p();
+					one = true;
                 }
             }
-			if(waiting_producers_counter > 0)
+			if(waiting_producers_counter > 0 && !one)
             {
 				waiting_producers.v();
 				masterMutex.p();

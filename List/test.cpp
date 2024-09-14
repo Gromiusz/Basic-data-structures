@@ -147,3 +147,21 @@ TEST_F(IntListTest, beginAndEnd)
     ASSERT_NE(list.begin(), List<int>::Iterator(nullptr));
     ASSERT_EQ(list.end(), List<int>::Iterator(nullptr));
 }
+
+TEST_F(IntListTest, clear)
+{
+    list.clear();
+    ASSERT_TRUE(list.empty());
+}
+
+TEST_F(IntListTest, insert_after)
+{
+    list.insert_after(list.begin(), 44);
+    ASSERT_EQ(list.size(), 5);
+}
+
+TEST_F(IntListTest, erase_after)
+{
+    list.erase_after(list.begin());
+    ASSERT_EQ(list.size(), 3);
+}

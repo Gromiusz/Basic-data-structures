@@ -40,13 +40,15 @@ public:
 
     class Iterator
     {
+    public:
         std::shared_ptr<ListElement<T>> current_pointer;
 
-    public:
+    //public:
         Iterator(std::shared_ptr<ListElement<T>> ptr) : current_pointer(ptr) {}
 
         Iterator &operator++();
         Iterator operator++(int);
+        Iterator operator+=(int);
         T *operator->();
         T &operator*();
 
