@@ -43,11 +43,11 @@ class Deque
     }
 
 public:
-    Deque() : {
+    Deque() {
         initialize_tabs();
     }
 
-    Deque(std::initializer_list<T> data) : {
+    Deque(std::initializer_list<T> data) {
         initialize_tabs();
 
     }
