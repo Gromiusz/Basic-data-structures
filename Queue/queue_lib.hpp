@@ -1,11 +1,24 @@
 #include <cstdlib>
+#include <initializer_list>
+
+constexpr size_t INIT_AMOUNT_OF_TABS = 4;
 
 template <typename T>
 class Deque
 {
-    T* tab;
-    size_t capacity = 3;
-    size_t size = 0;
+    size_t tabs_quantity;
+    //T* front_tab
+    T** pointer_to_tabs; // contains pointers to chunks
+    size_t* capacity_of_tabs;
+    size_t* size_of_tabs;
+
+
+    unsigned* order_of_tabs;
+    unsigned next_order_num = 0;
+
+    //T* end_tab;
+    unsigned front_table_idx = 0; // idx to poiner_to_tabs
+    unsigned last_table_idx = 0;
     size_t front = 1;
     size_t back = 1;
 
@@ -13,12 +26,40 @@ class Deque
         
     }
 
+    void initialize_tabs()
+    {
+        tabs_quantity = INIT_AMOUNT_OF_TABS;
+        pointer_to_tabs = new T*[tabs_quantity];
+        capacity_of_tabs = new size_t[tabs_quantity];
+        size_of_tabs = new size_t[tabs_quantity];
+        order_of_tabs = new unsigned[tabs_quantity];
+
+        unsigned first_tab = 0;
+        capacity_of_tabs[first_tab] = 4;
+        size_of_tabs[first_tab] = 0;
+        order_of_tabs[first_tab] = next_order_num++;
+        pointer_to_tabs[first_tab] = new T[capacity_of_tabs[first_tab]];
+    }
+
 public:
     Deque() : {
-        tab = new T[3];
+        initialize_tabs();
     }
+
+    Deque(std::initializer_list<T> data) : {
+        initialize_tabs();
+
+    }
+
     ~Deque(){
-        delete[] tab;
+        for(int i=0; i<tabs_quantity; i++)
+        {
+            delete[] pointer_to_tabs[i];
+        }
+        delete[] pointer_to_tabs;
+        delete[] capacity_of_tabs;
+        delete[] size_of_tabs;
+        delete[] order_of_tabs;
     }
 
     // Deque operator=(Deque other)
@@ -27,9 +68,9 @@ public:
     // }
     void push_back(T value)
     {
-        if(front<capacity)
+        if(back<capacity_of_tabs[last_table_idx]-1)
         {
-            tab[back++] = value;
+            tab[++back] = value;
             size++;
         }
         else{
