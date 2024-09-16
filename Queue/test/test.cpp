@@ -15,8 +15,8 @@ TEST(Constructors, Constructors)
     EXPECT_EQ(queue_i.size(), 2);
     EXPECT_FALSE(queue_i.empty());
 
-    EXPECT_EQ(queue_ii.front(), 5);
-    EXPECT_EQ(queue_ii.back(), 5);
-    EXPECT_EQ(queue_ii.size(), 4);
+    EXPECT_EQ(queue_ii.front(), 4);
+    EXPECT_EQ(queue_ii.back(), 4);
+    EXPECT_EQ(queue_ii.size(), 5);
     EXPECT_FALSE(queue_ii.empty());
 }
