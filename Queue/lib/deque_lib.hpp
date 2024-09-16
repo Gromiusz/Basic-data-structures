@@ -20,7 +20,7 @@ class Deque
     unsigned last_table_idx = 0;
 
     size_t front_ = 1;
-    size_t back_ = 1;
+    size_t back_ = 0;
     unsigned factor = 4; // staring point of the tab size. Next tabs will have double size of it
 
     void copy_data(T *from, T *to, size_t capacity)
@@ -50,6 +50,10 @@ public:
     Deque(std::initializer_list<T> data)
     {
         initialize_tabs();
+        for(auto el: data)
+        {
+            push_back(el);        
+        }
     }
 
     ~Deque()

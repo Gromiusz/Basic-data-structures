@@ -21,3 +21,6 @@ ProcessesBuffer/build/
 ProcessesBuffer/.vscode/
 ThreadsBuffer/build/
 ThreadsBuffer/.vscode/
+Queue/build
+Queue/.vscode
+
