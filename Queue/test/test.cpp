@@ -20,3 +20,15 @@ TEST(Constructors, Constructors)
     EXPECT_EQ(queue_bracket.size(), 5);
     EXPECT_FALSE(queue_bracket.empty());
 }
+
+TEST(Assign, toExisting)
+{
+    Deque<int> queue_bracket(5, 4);
+    Deque<int> queue_buckle{3, 2};
+
+    queue_buckle = queue_bracket;
+    EXPECT_EQ(queue_buckle.front(), 4);
+    EXPECT_EQ(queue_buckle.back(), 4);
+    EXPECT_EQ(queue_buckle.size(), 5);
+    EXPECT_FALSE(queue_buckle.empty());
+}

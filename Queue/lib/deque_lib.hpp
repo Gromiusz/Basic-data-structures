@@ -102,10 +102,11 @@ public:
         return size() == 0;
     }
 
-    // Deque operator=(Deque other)
-    // {
+    Deque& operator=(Deque& other)
+    {
+        return *this;
+    }
 
-    // }
     void push_back(T value)
     {
         if (back_ < capacity_of_tabs[last_table_idx] - 1) // checking if there is still space in tab
