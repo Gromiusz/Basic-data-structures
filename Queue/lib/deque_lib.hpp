@@ -90,7 +90,7 @@ public:
 
     bool empty()
     {
-        return 0;//size() == 0;
+        return size() == 0;
     }
 
     // Deque operator=(Deque other)
