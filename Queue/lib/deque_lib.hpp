@@ -37,10 +37,21 @@ class Deque
         order_of_tabs = new unsigned[size];
     }
 
+    void set_fabric_values()
+    {
+        tabs_capacity = INIT_AMOUNT_OF_TABS;
+        tabs_quantity = 1;
+        next_order_num = 0;
+        front_table_idx = 0;
+        last_table_idx = 0;
+        front_ = 1;
+        back_ = 0;
+        factor = START_FACTOR;
+    }
+
     void initialize()
     {
         initialize_tabs(tabs_capacity);
-
         unsigned first_tab = 0;
         capacity_of_tabs[first_tab] = factor;
         size_of_tabs[first_tab] = 0;
@@ -140,6 +151,28 @@ public:
             }
         }
         return *this;
+    }
+
+    void assign(std::initializer_list<T> list)
+    {
+        dealocate();
+        set_fabric_values();
+        initialize();
+        for(auto& el: list)
+        {
+            push_back(el);
+        }
+    }
+
+    void assign(unsigned quantity, T value)
+    {
+        // dealocate();
+        // set_fabric_values();
+        // initialize();
+        // for(auto& el: list)
+        // {
+        //     push_back(el);
+        // }
     }
 
     void push_back(T value)
