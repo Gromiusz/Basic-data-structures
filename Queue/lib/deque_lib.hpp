@@ -29,12 +29,17 @@ class Deque
     {
     }
 
-    void initialize_tabs()
+    void initialize_tabs(size_t size)
     {
-        pointer_to_tabs = new T *[tabs_capacity];
-        capacity_of_tabs = new size_t[tabs_capacity];
-        size_of_tabs = new size_t[tabs_capacity];
-        order_of_tabs = new unsigned[tabs_capacity];
+        pointer_to_tabs = new T *[size];
+        capacity_of_tabs = new size_t[size];
+        size_of_tabs = new size_t[size];
+        order_of_tabs = new unsigned[size];
+    }
+
+    void initialize()
+    {
+        initialize_tabs(tabs_capacity);
 
         unsigned first_tab = 0;
         capacity_of_tabs[first_tab] = factor;
@@ -58,12 +63,12 @@ class Deque
 public:
     Deque()
     {
-        initialize_tabs();
+        initialize();
     }
 
     Deque(unsigned quantity, T value)
     {
-        initialize_tabs();
+        initialize();
         for (int i = 0; i < quantity; i++)
         {
             push_back(value);
@@ -72,7 +77,7 @@ public:
 
     Deque(std::initializer_list<T> data)
     {
-        initialize_tabs();
+        initialize();
         for (auto el : data)
         {
             push_back(el);
@@ -121,11 +126,7 @@ public:
         back_ = other.back_;
         factor = other.factor;
 
-        // to samo w initialize tabs
-        pointer_to_tabs = new T *[tabs_capacity];
-        capacity_of_tabs = new size_t[tabs_capacity];
-        size_of_tabs = new size_t[tabs_capacity];
-        order_of_tabs = new unsigned[tabs_capacity];
+        initialize_tabs(tabs_capacity);
 
         for (int i = 0; i < tabs_quantity; i++)
         {
