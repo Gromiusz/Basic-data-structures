@@ -88,6 +88,11 @@ public:
         return pointer_to_tabs[last_table_idx][back_];
     }
 
+    bool empty()
+    {
+        return 0;//size() == 0;
+    }
+
     // Deque operator=(Deque other)
     // {
 
