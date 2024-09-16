@@ -127,27 +127,30 @@ public:
 
     Deque &operator=(const Deque &other)
     {
-        dealocate();
-        tabs_capacity = other.tabs_capacity;
-        tabs_quantity = other.tabs_quantity;
-        next_order_num = other.next_order_num;
-        front_table_idx = other.front_table_idx;
-        last_table_idx = other.last_table_idx;
-        front_ = other.front_;
-        back_ = other.back_;
-        factor = other.factor;
-
-        initialize_tabs(tabs_capacity);
-
-        for (int i = 0; i < tabs_quantity; i++)
+        if(this != &other)
         {
-            capacity_of_tabs[i] = other.capacity_of_tabs[i];
-            size_of_tabs[i] = other.size_of_tabs[i];
-            order_of_tabs[i] = other.order_of_tabs[i];
-            pointer_to_tabs[i] = new T[capacity_of_tabs[i]];
-            for (int j = 0; j < capacity_of_tabs[i]; j++)
+            dealocate();
+            tabs_capacity = other.tabs_capacity;
+            tabs_quantity = other.tabs_quantity;
+            next_order_num = other.next_order_num;
+            front_table_idx = other.front_table_idx;
+            last_table_idx = other.last_table_idx;
+            front_ = other.front_;
+            back_ = other.back_;
+            factor = other.factor;
+
+            initialize_tabs(tabs_capacity);
+
+            for (int i = 0; i < tabs_quantity; i++)
             {
-                pointer_to_tabs[i][j] = other.pointer_to_tabs[i][j];
+                capacity_of_tabs[i] = other.capacity_of_tabs[i];
+                size_of_tabs[i] = other.size_of_tabs[i];
+                order_of_tabs[i] = other.order_of_tabs[i];
+                pointer_to_tabs[i] = new T[capacity_of_tabs[i]];
+                for (int j = 0; j < capacity_of_tabs[i]; j++)
+                {
+                    pointer_to_tabs[i][j] = other.pointer_to_tabs[i][j];
+                }
             }
         }
         return *this;
@@ -195,5 +198,65 @@ public:
             back_ = 0;
             pointer_to_tabs[last_table_idx][back_] = value;
         }
+    }
+
+    class Iterator 
+    {
+    public:
+        T* pointer;
+
+        Iterator()
+        {
+            pointer = new T;
+        }
+        Iterator(const T& other)
+        {
+            pointer = new T;
+            pointer = &other.pointer;
+        }
+        ~Iterator()
+        {
+            delete pointer;
+        }
+        
+        Iterator& operator+=(int steps)
+        {
+            this->pointer += steps;
+            return *this;
+        }
+
+        Iterator operator+(Iterator copy, int component)
+        {
+            copy += component;
+            return copy; 
+        }
+
+        Iterator& operator++()
+        {
+            this->pointer++;
+            return *this;
+        }
+
+        Iterator operator++(int)
+        {
+            Iterator copy(*this);
+            this->pointer++;
+            return copy;
+        }
+
+    };
+
+    Iterator begin()
+    {
+        Iterator it;
+        it.pointer = &pointer_to_tabs[front_table_idx][front_];
+        return it;
+    }
+
+    Iterator end()
+    {
+        Iterator it;
+        it.pointer = &pointer_to_tabs[last_table_idx][back_];
+        return it;
     }
 };
