@@ -2,10 +2,12 @@
 #include <initializer_list>
 
 constexpr size_t INIT_AMOUNT_OF_TABS = 4;
+constexpr size_t START_FACTOR = 4;
 
 template <typename T>
 class Deque
 {
+    size_t tabs_capacity = INIT_AMOUNT_OF_TABS;
     size_t tabs_quantity = 1;
     // T* front_tab
     T **pointer_to_tabs; // contains pointers to chunks
@@ -21,7 +23,7 @@ class Deque
 
     size_t front_ = 1;
     size_t back_ = 0;
-    unsigned factor = 4; // staring point of the tab size. Next tabs will have double size of it
+    unsigned factor = START_FACTOR; // staring point of the tab size. Next tabs will have double size of it
 
     void copy_data(T *from, T *to, size_t capacity)
     {
@@ -29,16 +31,28 @@ class Deque
 
     void initialize_tabs()
     {
-        pointer_to_tabs = new T *[INIT_AMOUNT_OF_TABS];
-        capacity_of_tabs = new size_t[INIT_AMOUNT_OF_TABS];
-        size_of_tabs = new size_t[INIT_AMOUNT_OF_TABS];
-        order_of_tabs = new unsigned[INIT_AMOUNT_OF_TABS];
+        pointer_to_tabs = new T *[tabs_capacity];
+        capacity_of_tabs = new size_t[tabs_capacity];
+        size_of_tabs = new size_t[tabs_capacity];
+        order_of_tabs = new unsigned[tabs_capacity];
 
         unsigned first_tab = 0;
         capacity_of_tabs[first_tab] = factor;
         size_of_tabs[first_tab] = 0;
         order_of_tabs[first_tab] = next_order_num++;
         pointer_to_tabs[first_tab] = new T[capacity_of_tabs[first_tab]];
+    }
+
+    void dealocate()
+    {
+        for (int i = 0; i < tabs_quantity; i++)
+        {
+            delete[] pointer_to_tabs[i];
+        }
+        delete[] pointer_to_tabs;
+        delete[] capacity_of_tabs;
+        delete[] size_of_tabs;
+        delete[] order_of_tabs;
     }
 
 public:
@@ -50,7 +64,7 @@ public:
     Deque(unsigned quantity, T value)
     {
         initialize_tabs();
-        for(int i = 0; i < quantity; i++)
+        for (int i = 0; i < quantity; i++)
         {
             push_back(value);
         }
@@ -59,22 +73,15 @@ public:
     Deque(std::initializer_list<T> data)
     {
         initialize_tabs();
-        for(auto el: data)
+        for (auto el : data)
         {
-            push_back(el);        
+            push_back(el);
         }
     }
 
     ~Deque()
     {
-        for (int i = 0; i < tabs_quantity; i++)
-        {
-            delete[] pointer_to_tabs[i];
-        }
-        delete[] pointer_to_tabs;
-        delete[] capacity_of_tabs;
-        delete[] size_of_tabs;
-        delete[] order_of_tabs;
+        dealocate();
     }
 
     size_t size()
@@ -102,8 +109,35 @@ public:
         return size() == 0;
     }
 
-    Deque& operator=(Deque& other)
+    Deque &operator=(const Deque &other)
     {
+        dealocate();
+        tabs_capacity = other.tabs_capacity;
+        tabs_quantity = other.tabs_quantity;
+        next_order_num = other.next_order_num;
+        front_table_idx = other.front_table_idx;
+        last_table_idx = other.last_table_idx;
+        front_ = other.front_;
+        back_ = other.back_;
+        factor = other.factor;
+
+        // to samo w initialize tabs
+        pointer_to_tabs = new T *[tabs_capacity];
+        capacity_of_tabs = new size_t[tabs_capacity];
+        size_of_tabs = new size_t[tabs_capacity];
+        order_of_tabs = new unsigned[tabs_capacity];
+
+        for (int i = 0; i < tabs_quantity; i++)
+        {
+            capacity_of_tabs[i] = other.capacity_of_tabs[i];
+            size_of_tabs[i] = other.size_of_tabs[i];
+            order_of_tabs[i] = other.order_of_tabs[i];
+            pointer_to_tabs[i] = new T[capacity_of_tabs[i]];
+            for (int j = 0; j < capacity_of_tabs[i]; j++)
+            {
+                pointer_to_tabs[i][j] = other.pointer_to_tabs[i][j];
+            }
+        }
         return *this;
     }
 
