@@ -47,6 +47,15 @@ public:
         initialize_tabs();
     }
 
+    Deque(unsigned quantity, T value)
+    {
+        initialize_tabs();
+        // for(int i = 0; i < quantity; i++)
+        // {
+        //     push_back(value);
+        // }
+    }
+
     Deque(std::initializer_list<T> data)
     {
         initialize_tabs();
