@@ -166,13 +166,13 @@ public:
 
     void assign(unsigned quantity, T value)
     {
-        // dealocate();
-        // set_fabric_values();
-        // initialize();
-        // for(auto& el: list)
-        // {
-        //     push_back(el);
-        // }
+        dealocate();
+        set_fabric_values();
+        initialize();
+        for (int i = 0; i < quantity; i++)
+        {
+            push_back(value);
+        }
     }
 
     void push_back(T value)
