@@ -207,7 +207,6 @@ public:
 
         Iterator()
         {
-            pointer = new T;
             pointer = nullptr;
         }
 
@@ -215,32 +214,27 @@ public:
 
         Iterator(const T &other)
         {
-            pointer = new T;
             pointer = other.pointer;
         }
-        ~Iterator()
-        {
-            delete pointer;
-        }
+        ~Iterator() = default;
 
-        Iterator& operator=(const Iterator& it)
+        Iterator &operator=(const Iterator &it)
         {
-            if(this != it)
+            if (this != &it)
             {
-                delete pointer;
                 pointer = it.pointer;
             }
             return *this;
         }
 
-        bool operator==(const Iterator& first, const Iterator& second)
+        bool operator==(const Iterator &other)
         {
-            return first.pointer == second.pointer;
+            return pointer == other.pointer;
         }
 
-        bool operator!=(const Iterator& first, const Iterator& second)
+        bool operator!=(const Iterator &other)
         {
-            return first.pointer != second.pointer;
+            return pointer != other.pointer;
         }
 
         Iterator &operator+=(int steps)
@@ -262,12 +256,12 @@ public:
             return copy;
         }
 
-        Iterator *operator->()
+        T *operator->()
         {
             return pointer;
         }
 
-        Iterator& operator*()
+        T &operator*() 
         {
             return *pointer;
         }
@@ -283,18 +277,18 @@ public:
     Iterator end()
     {
         Iterator it;
-        it.pointer = &pointer_to_tabs[last_table_idx][back_+1];
+        it.pointer = &pointer_to_tabs[last_table_idx][back_ + 1];
         return it;
     }
 
-    Iterator operator+(Iterator copy, int component)
+    friend Iterator operator+(Iterator copy, int component)
     {
         copy += component;
         return copy;
     }
 
     template <typename Iterator_>
-    void assign(Iterator_ begin, Iterator_ end)
+    void assign(Iterator_& begin, Iterator_& end)
     {
         dealocate();
         set_fabric_values();
@@ -304,6 +298,5 @@ public:
             push_back(*begin);
             begin++;
         }
-        
     }
 };
