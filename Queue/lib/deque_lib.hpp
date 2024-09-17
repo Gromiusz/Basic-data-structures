@@ -202,7 +202,16 @@ public:
 
     T& operator[](unsigned idx)
     {
-        return pointer_to_tabs[front_table_idx][front_];
+        unsigned sum = 0;
+        unsigned tab_idx = -1;
+        do 
+        {
+            sum += size_of_tabs[order_of_tabs[++tab_idx]];
+        } 
+        while (sum < idx);
+        sum -= size_of_tabs[order_of_tabs[tab_idx]];
+        idx = idx - (sum - 1); // calculation the relative address in selected block
+        return pointer_to_tabs[order_of_tabs[tab_idx]][idx];
     }
 
     class Iterator
