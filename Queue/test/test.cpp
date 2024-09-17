@@ -9,6 +9,13 @@ public:
     BracketBuckleTest() : queue_bracket(5, 4), queue_buckle{3, 2} {}   
 };
 
+class BigQueueTest : public testing::Test 
+{
+public:
+    Deque<int> big_queue; // size = 14
+    BigQueueTest() : big_queue{3, 2, 6, 5, 1, 3, 2, 2, 8, 5, 6, 22, -5, 6} {}   
+};
+
 TEST(Constructors, Constructors)
 {
     Deque<int> queue;
@@ -90,6 +97,16 @@ TEST_F(BracketBuckleTest, DirectAcessWithChange)
     queue_buckle[0] = 8;
     EXPECT_EQ(queue_buckle[0], 8);
     EXPECT_EQ(queue_buckle[1], 2);
+}
+
+TEST_F(BigQueueTest, DirectAcessWithChange)
+{
+    EXPECT_EQ(big_queue[0], 3);
+    EXPECT_EQ(big_queue[13], 6);
+
+    ASSERT_EQ(big_queue[8], 8);
+    big_queue[8] = -20;
+    EXPECT_EQ(big_queue[8], -20);
 }
 
 
