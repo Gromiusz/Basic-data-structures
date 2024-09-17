@@ -66,3 +66,15 @@ TEST(Assign, InitializerList)
     EXPECT_EQ(queue_bracket.size(), 7);
     EXPECT_FALSE(queue_bracket.empty());
 }
+
+TEST(Assign, Iterators)
+{
+    Deque<int> queue_bracket(5, 4);
+    Deque<int> queue_buckle{3, 2};
+
+    queue_bracket.assign(queue_buckle.begin(), queue_buckle.end());
+    EXPECT_EQ(queue_bracket.front(), 3);
+    EXPECT_EQ(queue_bracket.back(), 2);
+    EXPECT_EQ(queue_bracket.size(), 2);
+    EXPECT_FALSE(queue_bracket.empty());
+}

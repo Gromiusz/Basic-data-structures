@@ -127,7 +127,7 @@ public:
 
     Deque &operator=(const Deque &other)
     {
-        if(this != &other)
+        if (this != &other)
         {
             dealocate();
             tabs_capacity = other.tabs_capacity;
@@ -161,7 +161,7 @@ public:
         dealocate();
         set_fabric_values();
         initialize();
-        for(auto& el: list)
+        for (auto &el : list)
         {
             push_back(el);
         }
@@ -200,38 +200,56 @@ public:
         }
     }
 
-    class Iterator 
+    class Iterator
     {
     public:
-        T* pointer;
+        T *pointer;
 
         Iterator()
         {
             pointer = new T;
+            pointer = nullptr;
         }
-        Iterator(const T& other)
+
+        Iterator(T *ptr) : pointer(ptr) {}
+
+        Iterator(const T &other)
         {
             pointer = new T;
-            pointer = &other.pointer;
+            pointer = other.pointer;
         }
         ~Iterator()
         {
             delete pointer;
         }
-        
-        Iterator& operator+=(int steps)
+
+        Iterator& operator=(const Iterator& it)
+        {
+            if(this != it)
+            {
+                delete pointer;
+                pointer = it.pointer;
+            }
+            return *this;
+        }
+
+        bool operator==(const Iterator& first, const Iterator& second)
+        {
+            return first.pointer == second.pointer;
+        }
+
+        bool operator!=(const Iterator& first, const Iterator& second)
+        {
+            return first.pointer != second.pointer;
+        }
+
+        Iterator &operator+=(int steps)
         {
             this->pointer += steps;
             return *this;
         }
 
-        Iterator operator+(Iterator copy, int component)
-        {
-            copy += component;
-            return copy; 
-        }
-
-        Iterator& operator++()
+        Iterator &operator++()
         {
             this->pointer++;
             return *this;
@@ -244,6 +262,15 @@ public:
             return copy;
         }
 
+        Iterator *operator->()
+        {
+            return pointer;
+        }
+
+        Iterator& operator*()
+        {
+            return *pointer;
+        }
     };
 
     Iterator begin()
@@ -256,7 +283,27 @@ public:
     Iterator end()
     {
         Iterator it;
-        it.pointer = &pointer_to_tabs[last_table_idx][back_];
+        it.pointer = &pointer_to_tabs[last_table_idx][back_+1];
         return it;
+    }
+
+    Iterator operator+(Iterator copy, int component)
+    {
+        copy += component;
+        return copy;
+    }
+
+    template <typename Iterator_>
+    void assign(Iterator_ begin, Iterator_ end)
+    {
+        dealocate();
+        set_fabric_values();
+        initialize();
+        while (begin != end)
+        {
+            push_back(*begin);
+            begin++;
+        }
+        
     }
 };
