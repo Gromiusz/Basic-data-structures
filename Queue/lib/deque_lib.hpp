@@ -200,6 +200,11 @@ public:
         }
     }
 
+    T& operator[](unsigned idx)
+    {
+        return pointer_to_tabs[front_table_idx][front_];
+    }
+
     class Iterator
     {
     public:
