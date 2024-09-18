@@ -191,7 +191,7 @@ public:
             tabs_quantity++;
             factor *= 2; // increasing the next tab size;
             pointer_to_tabs[++last_table_idx] = new T[factor];
-            order_of_tabs[last_table_idx] = ++next_order_num;
+            order_of_tabs[last_table_idx] = next_order_num++;
             capacity_of_tabs[last_table_idx] = factor;
             size_of_tabs[last_table_idx] = 1;
 
@@ -202,15 +202,16 @@ public:
 
     T& operator[](unsigned idx)
     {
-        unsigned sum = 0;
-        unsigned tab_idx = -1;
+        int sum = 0;
+        int tab_idx = -1;
         do 
         {
             sum += size_of_tabs[order_of_tabs[++tab_idx]];
         } 
         while (sum < idx);
         sum -= size_of_tabs[order_of_tabs[tab_idx]];
-        idx = idx - (sum - 1); // calculation the relative address in selected block
+        if (sum == 0) sum = - front_;
+        idx = idx - sum; // calculation the relative address in selected block
         return pointer_to_tabs[order_of_tabs[tab_idx]][idx];
     }
 
